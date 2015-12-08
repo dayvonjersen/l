@@ -28,10 +28,10 @@ var num_files int = 0
 var max_len int = 0
 
 func getLang(filename string) string {
-	//res1 := linguist.DetectFromFilename(filename)
-	//if res1 != "" {
-	//	return res1
-	//}
+	res1 := linguist.DetectFromFilename(filename)
+	if res1 != "" {
+		return res1
+	}
 
 	contents, err := ioutil.ReadFile(filename)
 	checkErr(err)
