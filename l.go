@@ -11,7 +11,7 @@ import (
 
 	"camlistore.org/pkg/magic"
 	"github.com/lintianzhi/ignore"
-	"github.com/petermattis/linguist"
+	"github.com/generaltso/linguist"
 )
 
 func checkErr(err error) {
