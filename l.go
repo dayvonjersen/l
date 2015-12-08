@@ -7,6 +7,7 @@ import (
 	"mime"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"camlistore.org/pkg/magic"
@@ -40,13 +41,14 @@ var ignore_mimetype_start []string = []string{
 func getLang(filename string) string {
 	res1 := linguist.DetectFromFilename(filename)
 	if res1 != "" {
+
 		return res1
 	}
-
-    // if we can't guess type by extension
-    // before jumping into lexing and parsing things like image files or cat videos
-    // or other binary formats which will give erroneous results
-    // and unnecessarily waste CPU time reading large files into memory
+	return "(unknown)"
+	// if we can't guess type by extension
+	// before jumping into lexing and parsing things like image files or cat videos
+	// or other binary formats which will give erroneous results
+	// and unnecessarily waste CPU time reading large files into memory
 	parts := strings.Split(filename, ".")
 	ext := parts[len(parts)-1]
 	mimetype := mime.TypeByExtension("." + ext)
@@ -103,7 +105,7 @@ func processDir(dirname string) {
 	checkErr(os.Chdir(dirname))
 	for _, file := range files {
 		if abs, err := filepath.Abs(file.Name()); err == nil {
-			fmt.Fprintf(stderr, "% 80s\r", " ")
+			//			fmt.Fprintf(stderr, "\r\033[H\033[2J")
 			fmt.Fprintf(stderr, "%s...\r", abs)
 			stderr.Flush()
 		}
@@ -153,14 +155,22 @@ func main() {
 		}
 	}
 	processDir(".")
-	fmt.Fprintf(stderr, "% 80s\r", " ")
-	fmt.Println()
+	//	fmt.Fprintf(stderr, "\r\033[H\033[2J")
+
 	fmtstr := fmt.Sprintf("%% %ds", max_len)
 	fmt.Printf(fmtstr, "Language")
-	fmt.Println(" (Size)  (Frequency)\n---")
-	fmtstr += ": %07.4f%% %07.4f%%\n"
+	fmt.Println()
+	fmtstr += ": %07.4f%%\n"
+	results := []float64{}
+	qqq := map[float64]string{}
 	for lang, num := range langs {
-		fmt.Printf(fmtstr, lang, (float64(num)/float64(total_size))*100.0, (float64(res[lang])/float64(num_files))*100.0)
+		res := (float64(num) / float64(total_size)) * 100.0
+		results = append(results, res)
+		qqq[res] = lang
+	}
+	sort.Sort(sort.Reverse(sort.Float64Slice(results)))
+	for _, percent := range results {
+		fmt.Printf(fmtstr, qqq[percent], percent)
 	}
 	fmt.Printf("---\n%d languages detected in %d bytes of %d files\n", len(langs), total_size, num_files)
 }
