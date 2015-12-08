@@ -39,12 +39,10 @@ var ignore_mimetype_start []string = []string{
 }
 
 func getLang(filename string) string {
-	res1 := linguist.DetectFromFilename(filename)
+	res1, hints := linguist.DetectFromFilename(filename)
 	if res1 != "" {
-
 		return res1
 	}
-	return "(unknown)"
 	// if we can't guess type by extension
 	// before jumping into lexing and parsing things like image files or cat videos
 	// or other binary formats which will give erroneous results
@@ -86,7 +84,7 @@ func getLang(filename string) string {
 		}
 	}
 
-	res2 := linguist.DetectFromContents(contents)
+	res2 := linguist.DetectFromContents(contents, hints)
 	if res2 != "" {
 		return res2
 	}
