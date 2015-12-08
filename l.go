@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"camlistore.org/pkg/magic"
-	"github.com/lintianzhi/ignore"
 	"github.com/generaltso/linguist"
+	"github.com/lintianzhi/ignore"
 )
 
 func checkErr(err error) {
@@ -27,29 +27,66 @@ var res map[string]int = make(map[string]int)
 var num_files int = 0
 var max_len int = 0
 
+//temporary
+var ignore_mimetype []string = []string{
+	"application/octet-stream",
+}
+var ignore_mimetype_start []string = []string{
+	"image",
+	"audio",
+	"video",
+}
+
 func getLang(filename string) string {
 	res1 := linguist.DetectFromFilename(filename)
 	if res1 != "" {
 		return res1
 	}
 
-	contents, err := ioutil.ReadFile(filename)
-	checkErr(err)
-	res2 := linguist.DetectFromContents(contents)
-	if res2 != "" {
-		return res2
-	}
-
+    // if we can't guess type by extension
+    // before jumping into lexing and parsing things like image files or cat videos
+    // or other binary formats which will give erroneous results
+    // and unnecessarily waste CPU time reading large files into memory
 	parts := strings.Split(filename, ".")
 	ext := parts[len(parts)-1]
 	mimetype := mime.TypeByExtension("." + ext)
 	if mimetype != "" {
-		return mimetype
+		for _, im := range ignore_mimetype {
+			if mimetype == im {
+				return mimetype
+			}
+		}
+		mp := strings.Split(mimetype, "/")
+		mstart := mp[0]
+		for _, im := range ignore_mimetype_start {
+			if mstart == im {
+				return mimetype
+			}
+		}
 	}
+
+	contents, err := ioutil.ReadFile(filename)
+	checkErr(err)
 
 	mimetyperedux := magic.MIMEType(contents)
 	if mimetyperedux != "" {
-		return mimetyperedux
+		for _, im := range ignore_mimetype {
+			if mimetyperedux == im {
+				return mimetyperedux
+			}
+		}
+		mp := strings.Split(mimetyperedux, "/")
+		mstart := mp[0]
+		for _, im := range ignore_mimetype_start {
+			if mstart == im {
+				return mimetyperedux
+			}
+		}
+	}
+
+	res2 := linguist.DetectFromContents(contents)
+	if res2 != "" {
+		return res2
 	}
 
 	//fmt.Fprintf(os.Stderr, "unknown ext: %s\nfilename: %s\n\n", ext, filename)
@@ -70,9 +107,9 @@ func processDir(dirname string) {
 			fmt.Fprintf(stderr, "%s...\r", abs)
 			stderr.Flush()
 		}
-        if file.Size() == 0 {
-            continue
-        }
+		if file.Size() == 0 {
+			continue
+		}
 		if isIgnored(dirname + string(os.PathSeparator) + file.Name()) {
 			continue
 		}
