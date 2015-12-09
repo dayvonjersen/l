@@ -25,16 +25,6 @@ var res map[string]int = make(map[string]int)
 var num_files int = 0
 var max_len int = 0
 
-//temporary
-var ignore_mimetype []string = []string{
-	"application/octet-stream",
-}
-var ignore_mimetype_start []string = []string{
-	"image",
-	"audio",
-	"video",
-}
-
 func getLang(filename string) string {
 	res1 := linguist.DetectFromFilename(filename)
 	if res1 != "" {
