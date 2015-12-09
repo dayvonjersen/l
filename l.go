@@ -4,13 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"io/ioutil"
-	"mime"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
-	"camlistore.org/pkg/magic"
 	"github.com/generaltso/linguist"
 	"github.com/lintianzhi/ignore"
 )
@@ -48,42 +45,13 @@ func getLang(filename string) string {
 	// before jumping into lexing and parsing things like image files or cat videos
 	// or other binary formats which will give erroneous results
 	// and unnecessarily waste CPU time reading large files into memory
-	parts := strings.Split(filename, ".")
-	ext := parts[len(parts)-1]
-	mimetype := mime.TypeByExtension("." + ext)
-	if mimetype != "" {
-		for _, im := range ignore_mimetype {
-			if mimetype == im {
-				return mimetype
-			}
-		}
-		mp := strings.Split(mimetype, "/")
-		mstart := mp[0]
-		for _, im := range ignore_mimetype_start {
-			if mstart == im {
-				return mimetype
-			}
-		}
+	mimetype, shouldIgnore, err := linguist.DetectMimeFromFilename(filename)
+	checkErr(err)
+	if shouldIgnore {
+		return mimetype
 	}
-
 	contents, err := ioutil.ReadFile(filename)
 	checkErr(err)
-
-	mimetyperedux := magic.MIMEType(contents)
-	if mimetyperedux != "" {
-		for _, im := range ignore_mimetype {
-			if mimetyperedux == im {
-				return mimetyperedux
-			}
-		}
-		mp := strings.Split(mimetyperedux, "/")
-		mstart := mp[0]
-		for _, im := range ignore_mimetype_start {
-			if mstart == im {
-				return mimetyperedux
-			}
-		}
-	}
 
 	res2 := linguist.DetectFromContents(contents)
 	if res2 != "" {
