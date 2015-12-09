@@ -44,7 +44,6 @@ func getLang(filename string) string {
 
 		return res1
 	}
-	return "(unknown)"
 	// if we can't guess type by extension
 	// before jumping into lexing and parsing things like image files or cat videos
 	// or other binary formats which will give erroneous results
