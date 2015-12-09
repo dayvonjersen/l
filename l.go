@@ -28,7 +28,6 @@ var max_len int = 0
 func getLang(filename string) string {
 	res1 := linguist.DetectFromFilename(filename)
 	if res1 != "" {
-
 		return res1
 	}
 	// if we can't guess type by extension
@@ -37,7 +36,7 @@ func getLang(filename string) string {
 	// and unnecessarily waste CPU time reading large files into memory
 	mimetype, shouldIgnore, err := linguist.DetectMimeFromFilename(filename)
 	checkErr(err)
-	if shouldIgnore {
+	if mimetype != "" && shouldIgnore {
 		return mimetype
 	}
 	contents, err := ioutil.ReadFile(filename)
